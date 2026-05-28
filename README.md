@@ -81,15 +81,35 @@ streamlit run app/streamlit_app.py
 Set `OPENAI_API_KEY` to enable the advisor agent (the optimiser, forecaster, and
 backtest run without it).
 
-## Deploy (AWS ECS Fargate)
+## Deploy
+
+The trained model, processed prices, and Chroma store (~2.6 MB total) are committed,
+so the container is self-contained — no rebuild step on the host.
+
+### Free — Google Cloud Run (recommended for a demo)
+
+Scales to zero (no idle cost, stays in the free tier) and builds from source via
+Cloud Build, so **no local Docker is needed**:
+
+```bash
+gcloud auth login
+gcloud config set project YOUR_PROJECT_ID            # billing must be enabled
+gcloud services enable run.googleapis.com cloudbuild.googleapis.com artifactregistry.googleapis.com
+bash deploy/deploy-cloudrun.sh                        # prints the live URL
+```
+
+Deploys **without an OpenAI key** by default — the optimiser, forecast, money chart,
+and RAG retrieval run live; the LLM advisor tab shows a notice. Uncomment the
+`--set-secrets` block in the script to enable the agent later.
+
+### AWS ECS Fargate
 
 ```bash
 aws ssm put-parameter --name /bess/openai_api_key --type SecureString --value sk-...
 cd deploy && ./deploy-ecs.sh        # builds, pushes to ECR, runs a Fargate service
 ```
 
-The image bakes the trained model, processed prices, and the Chroma store, so the
-container is self-contained. See `deploy/deploy-ecs.sh` for the public-IP / cost notes.
+See `deploy/deploy-ecs.sh` for the public-IP / cost notes (~A$50-60/mo if left on).
 
 ## Repo layout
 

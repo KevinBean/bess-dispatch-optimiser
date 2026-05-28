@@ -1,0 +1,14 @@
+# Cloud Build upload filter. If this file exists, gcloud uses it INSTEAD of
+# deriving one from .gitignore — so the baked artifacts (models/, data/processed/,
+# chroma_store/) ARE uploaded even though .gitignore excludes them.
+.git/
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+notebooks/
+tests/
+data/raw/
+.env
+scripts/capture_to_vault.py

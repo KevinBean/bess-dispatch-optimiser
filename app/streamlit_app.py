@@ -10,6 +10,7 @@ Reads baked artifacts (trained model, cached prices, Chroma store) from the imag
 
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -102,6 +103,13 @@ with tab1:
 
 with tab2:
     st.write("Ask about dispatch, forecasts, revenue, or NEM market mechanics.")
+    if not os.environ.get("OPENAI_API_KEY"):
+        st.info(
+            "🔑 The LLM advisor is disabled on this public demo (no API key, to avoid "
+            "billing exposure). The **Forecast & Dispatch** and **Backtest** tabs run "
+            "live. To enable the agent, run locally with `OPENAI_API_KEY` set — it then "
+            "calls the optimiser, forecaster, and RAG store as LangGraph tools."
+        )
     q = st.text_input("Question", "What's the optimal dispatch in SA1 tomorrow and how much could I make?")
     if st.button("Ask"):
         with st.spinner("Agent thinking (calling tools)…"):
