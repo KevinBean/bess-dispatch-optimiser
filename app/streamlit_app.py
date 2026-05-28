@@ -32,6 +32,18 @@ from src.bess.optimiser import optimise_dispatch  # noqa: E402
 st.set_page_config(page_title="BESS Dispatch Optimiser", page_icon="🔋", layout="wide")
 
 
+def available_regions() -> list[str]:
+    """Regions that actually have a baked model + cached prices (so the demo can
+    serve them). Avoids offering regions that would crash on load."""
+    out = []
+    for r in data.REGIONS:
+        has_data = (ROOT / "data" / "processed" / f"{r}.parquet").exists()
+        has_model = (ROOT / "models" / f"forecaster_{r}.pt").exists()
+        if has_data and has_model:
+            out.append(r)
+    return out or [data.REGIONS[0]]
+
+
 @st.cache_resource
 def load_region(region: str):
     df = data.load_processed(region)
@@ -63,16 +75,24 @@ st.caption(
     "Chroma RAG over NEM market docs · real AEMO data"
 )
 
-region = st.sidebar.selectbox("NEM region", list(data.REGIONS), index=2)
+_regions = available_regions()
+region = st.sidebar.selectbox(
+    "NEM region", _regions,
+    index=_regions.index("SA1") if "SA1" in _regions else 0,
+)
 battery = battery_from_sidebar()
 market = MarketConfig(region=region)
 
 tab1, tab2, tab3 = st.tabs(["⚡ Forecast & Dispatch", "💬 Ask the Advisor", "📈 Backtest"])
 
 with tab1:
-    df, fc = load_region(region)
+    try:
+        df, fc = load_region(region)
+    except Exception as e:  # noqa: BLE001
+        df, fc = None, None
+        st.error(f"Data for {region} isn't bundled in this demo ({type(e).__name__}).")
     if fc is None:
-        st.warning(f"No trained forecaster for {region}.")
+        st.warning(f"No trained forecaster for {region} — pick another region.")
     else:
         preds = fc.predict_next(df.iloc[-fc.cfg.lookback :])
         res = optimise_dispatch(preds, battery, market)
