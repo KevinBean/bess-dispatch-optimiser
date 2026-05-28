@@ -1,0 +1,18 @@
+{
+  "region": "TAS1",
+  "test_start": "2024-11-15",
+  "policies": {
+    "perfect": {
+      "realised_revenue": 1542677.05,
+      "pct_of_perfect": 1.0
+    },
+    "forecast": {
+      "realised_revenue": 383771.31,
+      "pct_of_perfect": 0.2488
+    },
+    "naive": {
+      "realised_revenue": -97994.3,
+      "pct_of_perfect": -0.0635
+    }
+  }
+}

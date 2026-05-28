@@ -61,9 +61,27 @@ def main() -> None:
     ax.legend()
     ax.grid(alpha=0.3)
     fig.tight_layout()
-    out = ROOT / "docs" / "money_chart.png"
+    region = args.region.upper()
+    out = ROOT / "docs" / f"money_chart_{region}.png"
     fig.savefig(out, dpi=120)
-    print(f"\nsaved money chart -> {out}")
+    if region == "SA1":  # keep the canonical name for the README hero image
+        fig.savefig(ROOT / "docs" / "money_chart.png", dpi=120)
+    # JSON sidecar so the demo can caption with the numbers without recomputing.
+    import json
+
+    summary = {
+        "region": region,
+        "test_start": args.test_start,
+        "policies": {
+            name: {
+                "realised_revenue": round(res[name].realised_revenue, 2),
+                "pct_of_perfect": round(res[name].captured_frac_of_perfect, 4),
+            }
+            for name in ("perfect", "forecast", "naive") if name in res
+        },
+    }
+    (ROOT / "docs" / f"backtest_{region}.json").write_text(json.dumps(summary, indent=2))
+    print(f"\nsaved -> {out} + backtest_{region}.json")
 
 
 if __name__ == "__main__":

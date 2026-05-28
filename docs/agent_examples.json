@@ -1,0 +1,12 @@
+{
+  "examples": [
+    {
+      "question": "What's the optimal dispatch for a 100 MW / 200 MWh battery in SA1 tomorrow, and how much could it make?",
+      "answer": "For tomorrow in the SA1 region, the optimal dispatch for a 100 MW / 200 MWh battery is as follows:\n\n- **Charge**: Approximately 3.0 hours, primarily between +12.0h and +23.5h.\n- **Discharge**: Approximately 3.0 hours, mainly between +0.0h and +20.0h.\n\nThe estimated arbitrage revenue from this dispatch strategy is approximately **$26,974**. Please note that this is a forecast-based estimate, and actual revenue will depend on the realized prices.\n\nThe forecasted prices for the next 24 hours in SA1 indicate a mean price of **$64/MWh**, with a minimum of **$-40/MWh** at +12.5h and a maximum of **$121/MWh** at +18.5h."
+    },
+    {
+      "question": "Why do negative prices happen in the NEM, and should my battery charge during them?",
+      "answer": "Negative prices in the National Electricity Market (NEM) occur primarily during periods of low demand and high renewable generation, particularly from solar power. When there is an oversupply of electricity, especially during sunny days when solar generation peaks, prices can drop to zero or even become negative. This situation arises because the NEM operates as an energy-only market without a capacity market, meaning that prices are driven by supply and demand dynamics. \n\nAccording to the NEM Market Basics document, \"sunny low-demand middays can drive prices to zero or negative.\" This volatility is a characteristic of the market, where high demand in the evening can lead to price spikes, while low demand during the day can lead to negative pricing.\n\nRegarding whether your battery should charge during negative price periods, it is generally advisable to charge your battery when prices are negative. This allows you to take advantage of the low-cost electricity, which can later be discharged when prices are higher, thus maximizing your revenue through energy arbitrage.\n\nHowever, it's important to note that forecasts are uncertain, and actual revenue will depend on future market conditions."
+    }
+  ]
+}

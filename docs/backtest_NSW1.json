@@ -1,0 +1,18 @@
+{
+  "region": "NSW1",
+  "test_start": "2024-11-15",
+  "policies": {
+    "perfect": {
+      "realised_revenue": 7826859.81,
+      "pct_of_perfect": 1.0
+    },
+    "forecast": {
+      "realised_revenue": 2573688.84,
+      "pct_of_perfect": 0.3288
+    },
+    "naive": {
+      "realised_revenue": 3121462.73,
+      "pct_of_perfect": 0.3988
+    }
+  }
+}

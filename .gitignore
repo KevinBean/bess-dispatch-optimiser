@@ -33,3 +33,9 @@ chroma_store/
 
 # Personal glue — reads the local emptyos auth_token + vault paths; not part of the product
 scripts/capture_to_vault.py
+
+# Throwaway UI-walk screenshots
+docs/live_*.png
+docs/walk_*.png
+docs/audit_*.png
+docs/local_*.png

@@ -1,0 +1,18 @@
+{
+  "region": "SA1",
+  "test_start": "2024-11-15",
+  "policies": {
+    "perfect": {
+      "realised_revenue": 2670048.31,
+      "pct_of_perfect": 1.0
+    },
+    "forecast": {
+      "realised_revenue": 970684.71,
+      "pct_of_perfect": 0.3635
+    },
+    "naive": {
+      "realised_revenue": 794577.29,
+      "pct_of_perfect": 0.2976
+    }
+  }
+}

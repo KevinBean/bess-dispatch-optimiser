@@ -25,11 +25,24 @@ import matplotlib.pyplot as plt  # noqa: E402
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+import json  # noqa: E402
+
 from src.bess import data  # noqa: E402
 from src.bess.config import BatteryConfig, MarketConfig  # noqa: E402
 from src.bess.optimiser import optimise_dispatch  # noqa: E402
 
 st.set_page_config(page_title="BESS Dispatch Optimiser", page_icon="🔋", layout="wide")
+
+REPO_URL = "https://github.com/KevinBean/bess-dispatch-optimiser"
+# Forecast skill vs seasonal-naive on the held-out test split (MAE-based, from training).
+FORECAST_SKILL = {"SA1": 0.075, "NSW1": 0.321, "QLD1": 0.175, "TAS1": 0.102, "VIC1": 0.043}
+
+
+def _load_json(path: Path):
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
 
 
 def available_regions() -> list[str]:
@@ -74,6 +87,24 @@ st.caption(
     "MILP arbitrage (PuLP + HiGHS) · PyTorch price forecast · LangGraph advisor · "
     "Chroma RAG over NEM market docs · real AEMO data"
 )
+with st.expander("What this demonstrates  ·  view the code", expanded=False):
+    st.markdown(
+        f"""
+A grid-scale battery dispatch optimiser & advisor, built end-to-end on **real AEMO
+NEM data** to answer: *when should a battery charge/discharge to maximise arbitrage
+revenue?*
+
+| Capability | How |
+|---|---|
+| **Mathematical optimisation** | MILP dispatch — round-trip losses, SoC limits, charge/discharge mutex (PuLP + HiGHS) |
+| **Deep learning (PyTorch)** | Multi-horizon LSTM price forecaster, evaluated leakage-free vs a seasonal-naive baseline |
+| **Agents (LangGraph)** | Tool-calling `StateGraph` — the optimiser, forecaster, and doc search are tools |
+| **RAG / vector DB (Chroma)** | Hugging-Face embeddings over NEM market docs so the agent cites sources |
+| **Cloud deploy (AWS / GCP)** | Containerised; this demo runs on Cloud Run |
+
+🔗 **[View the source on GitHub]({REPO_URL})**  ·  five NEM regions · honest perfect-vs-forecast-vs-naive backtest
+"""
+    )
 
 _regions = available_regions()
 region = st.sidebar.selectbox(
@@ -99,10 +130,14 @@ with tab1:
         dt_h = market.interval_hours
         hours = np.arange(len(preds)) * dt_h
 
+        skill = FORECAST_SKILL.get(region)
         c1, c2, c3 = st.columns(3)
         c1.metric("Est. 24h arbitrage revenue", f"${res.revenue:,.0f}")
-        c2.metric("Round-trip efficiency", f"{battery.round_trip_efficiency:.0%}")
-        c3.metric("Energy / Power", f"{battery.energy_mwh:.0f} MWh / {battery.power_mw:.0f} MW")
+        c2.metric("Forecast skill vs naive (MAE)",
+                  f"{skill:+.0%}" if skill is not None else "—")
+        c3.metric("Round-trip efficiency", f"{battery.round_trip_efficiency:.0%}")
+        st.caption(f"Battery: {battery.power_mw:.0f} MW / {battery.energy_mwh:.0f} MWh "
+                   f"({battery.energy_mwh / battery.power_mw:.1f} h duration)")
 
         fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(11, 6), sharex=True)
         ax1.plot(hours, preds, color="#d62728")
@@ -123,31 +158,59 @@ with tab1:
 
 with tab2:
     st.write("Ask about dispatch, forecasts, revenue, or NEM market mechanics.")
-    if not os.environ.get("OPENAI_API_KEY"):
+    keyless = not os.environ.get("OPENAI_API_KEY")
+    if keyless:
         st.info(
-            "🔑 The LLM advisor is disabled on this public demo (no API key, to avoid "
-            "billing exposure). The **Forecast & Dispatch** and **Backtest** tabs run "
-            "live. To enable the agent, run locally with `OPENAI_API_KEY` set — it then "
-            "calls the optimiser, forecaster, and RAG store as LangGraph tools."
+            "🔑 The live LLM advisor is disabled on this public demo (no API key, to "
+            "avoid billing exposure) — but here are **real captured answers** below, so "
+            "you can see what the LangGraph agent produces. It calls the optimiser, "
+            "forecaster, and Chroma RAG store as tools. Run locally with `OPENAI_API_KEY` "
+            "to ask your own questions."
         )
-    q = st.text_input("Question", "What's the optimal dispatch in SA1 tomorrow and how much could I make?")
-    if st.button("Ask"):
-        with st.spinner("Agent thinking (calling tools)…"):
-            try:
-                from src.bess.agent import ask
+        examples = _load_json(ROOT / "docs" / "agent_examples.json")
+        if examples and examples.get("examples"):
+            st.markdown("##### Example agent answers (captured live)")
+            for ex in examples["examples"]:
+                with st.expander("💬 " + ex["question"], expanded=False):
+                    st.markdown(ex["answer"])
+    else:
+        q = st.text_input("Question", "What's the optimal dispatch in SA1 tomorrow and how much could I make?")
+        if st.button("Ask"):
+            with st.spinner("Agent thinking (calling tools)…"):
+                try:
+                    from src.bess.agent import ask
 
-                st.markdown(ask(q))
-            except Exception as e:  # noqa: BLE001
-                st.error(f"Agent unavailable: {e}\n\nSet OPENAI_API_KEY to enable the advisor.")
+                    st.markdown(ask(q))
+                except Exception as e:  # noqa: BLE001
+                    st.error(f"Agent unavailable: {e}\n\nSet OPENAI_API_KEY to enable the advisor.")
 
 with tab3:
-    chart = ROOT / "docs" / "money_chart.png"
+    chart = ROOT / "docs" / f"money_chart_{region}.png"
+    if not chart.exists():
+        chart = ROOT / "docs" / "money_chart.png"  # fallback to SA1 hero image
     if chart.exists():
-        st.image(str(chart), caption="Day-ahead backtest, settled at actual prices.")
+        st.image(str(chart), caption=f"{region} day-ahead backtest, settled at actual prices.")
     else:
         st.info("Run scripts/run_backtest.py to generate the money chart.")
-    st.markdown(
+
+    bt = _load_json(ROOT / "docs" / f"backtest_{region}.json")
+    reading = (
         "**Reading it:** the gap between *perfect* and *forecast* is the cost of "
-        "forecast error; *forecast* vs *naive* is the value the LSTM adds. Most of "
+        "forecast error; *forecast* vs *naive* is whether the LSTM adds value. Most of "
         "perfect-foresight's lead comes from a few unpredictable price-spike days."
     )
+    if bt and "policies" in bt:
+        pol = bt["policies"]
+        fpct = pol.get("forecast", {}).get("pct_of_perfect")
+        npct = pol.get("naive", {}).get("pct_of_perfect")
+        if fpct is not None and npct is not None:
+            if fpct >= npct:
+                verdict = (f"Here the LSTM captured **{fpct:.0%}** of perfect-foresight "
+                           f"revenue vs **{npct:.0%}** for naive — it adds value in {region}.")
+            else:
+                verdict = (f"Honest result: in {region} the LSTM captured **{fpct:.0%}** "
+                           f"vs naive's **{npct:.0%}** — naive did *better* on revenue here "
+                           f"despite the LSTM's stronger MAE. Better point-forecast accuracy "
+                           f"doesn't guarantee better dispatch economics.")
+            reading += "\n\n" + verdict
+    st.markdown(reading)
