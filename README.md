@@ -136,7 +136,9 @@ tests/           optimiser invariants
   real battery's stacked return (see `docs/knowledge/fcas_and_revenue_stacking.md`).
 - Prices are raw RRP; MLF, network charges, and connection costs aren't netted off.
 - Day-ahead framing pins terminal SoC to the start each day (no multi-day shifting).
-- One year, one region by default; the pipeline generalises to all five NEM regions.
+- Trained on one year for three regions (SA1, NSW1, VIC1); the pipeline generalises
+  to all five NEM regions. Forecast skill vs naive scales with volatility: NSW1
+  +32%, SA1 +7.5%, VIC1 +4% (the spikier the region, the more the model helps).
 
 ## Tech
 
