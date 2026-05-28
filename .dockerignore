@@ -1,0 +1,13 @@
+# Keep the build context lean — but DO include models/, data/processed/,
+# chroma_store/ (the Dockerfile bakes them, unlike .gitignore which excludes them).
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.git/
+notebooks/
+data/raw/
+tests/
+.env
+*.md.bak

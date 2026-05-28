@@ -1,0 +1,56 @@
+[project]
+name = "bess-dispatch-optimiser"
+version = "0.1.0"
+description = "Grid-scale BESS dispatch optimiser & advisor — MILP arbitrage, PyTorch price forecast, LangGraph agent, Chroma RAG over NEM market docs."
+readme = "README.md"
+requires-python = ">=3.12,<3.13"
+license = { text = "MIT" }
+authors = [{ name = "Kevin Bian" }]
+
+dependencies = [
+    "pandas==2.2.*",
+    "numpy==2.1.*",
+    "pyarrow>=17",
+    "requests>=2.32",
+    "pulp==2.9.*",
+    "highspy==1.7.*",
+    "torch==2.6.*",
+    "scikit-learn==1.5.*",
+    "matplotlib>=3.9",
+    "pydantic>=2.9",
+]
+
+[project.optional-dependencies]
+# Heavy AI surface — installed for the agent + RAG + demo, kept separate so the
+# core optimiser/forecast can be developed and tested without them.
+ai = [
+    "langgraph==0.2.*",
+    "langchain-core==0.3.*",
+    "langchain-openai==0.2.*",
+    "chromadb==0.5.*",
+    "sentence-transformers==3.3.*",
+    "pypdf>=5.0",
+]
+demo = [
+    "fastapi==0.115.*",
+    "uvicorn[standard]>=0.32",
+    "streamlit==1.40.*",
+]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.7",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bess"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

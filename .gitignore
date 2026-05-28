@@ -1,0 +1,35 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Data — large / reproducible from scripts/fetch_data.py
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Model artifacts
+*.pt
+*.ckpt
+models/*
+!models/.gitkeep
+
+# Chroma store
+.chroma/
+chroma_store/
+
+# Secrets / cloud
+.env
+*.pem
+.aws/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
+
+# Personal glue — reads the local emptyos auth_token + vault paths; not part of the product
+scripts/capture_to_vault.py

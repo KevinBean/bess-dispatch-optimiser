@@ -1,0 +1,18 @@
+# Full dependency set for the deployed demo image (core + ai + demo).
+# torch CPU wheel is installed separately in the Dockerfile via the PyTorch CPU index.
+pandas==2.2.*
+numpy==2.1.*
+pyarrow>=17
+requests>=2.32
+pulp==2.9.*
+highspy==1.7.*
+scikit-learn==1.5.*
+matplotlib>=3.9
+pydantic>=2.9
+langgraph==0.2.*
+langchain-core==0.3.*
+langchain-openai==0.2.*
+chromadb==0.5.*
+sentence-transformers==3.3.*
+pypdf>=5.0
+streamlit==1.40.*
