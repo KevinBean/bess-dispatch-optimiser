@@ -15,7 +15,24 @@ Built end-to-end on **real AEMO price + demand data**:
   invoking the optimiser, the forecaster, and a document store.
 - **Chroma RAG** — a vector store over NEM/BESS market docs (Hugging Face
   embeddings) so the agent **cites its sources** instead of freelancing rules.
-- **AWS ECS Fargate** deploy — a public Streamlit demo from a single container.
+- **One-container deploy** — a public Streamlit demo, free on Google Cloud Run
+  (scales to zero) or AWS ECS Fargate.
+
+## Why this exists
+
+I'm a power-systems engineer — a decade in HV cable and transmission, a PhD in
+electrical engineering — who builds software. Grid engineering and ML rarely live
+in the same person: most people who can read a dispatch curve can't write the
+optimiser behind it, and most people who can write the optimiser can't tell you
+why an SA1 price spikes at 6 pm. This project sits in that overlap on purpose —
+real AEMO market data, a MILP dispatch model, a forecaster judged honestly
+against a naive baseline, and an agent that explains its plan against cited market
+rules.
+
+It's a work sample, not a product: the kind of thing I'd build inside an energy-
+software or grid-analytics team. The numbers are reported straight — including
+where the forecast captures only ~36% of perfect foresight — because the point is
+to show the engineering, not a marketing chart.
 
 ## Architecture
 
