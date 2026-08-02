@@ -4,6 +4,9 @@ Decide when a grid-scale battery should charge and discharge to maximise energy-
 arbitrage revenue on the Australian National Electricity Market (NEM) — and ask a
 natural-language agent to explain the plan and the market rules behind it.
 
+**[▶ Live demo](https://bess-dispatch-optimiser-293079882499.australia-southeast1.run.app)**
+— free-tier Cloud Run, scales to zero, may take ~10-20s to cold-start.
+
 Built end-to-end on **real AEMO price + demand data**:
 
 - **MILP dispatch optimiser** (PuLP + HiGHS) — optimal charge/discharge against a
@@ -56,7 +59,7 @@ flowchart LR
 
     Agent --> UI[Streamlit demo]
     BT --> UI
-    UI --> ECS[AWS ECS Fargate]
+    UI --> RUN[Google Cloud Run]
 ```
 
 ## Headline result
@@ -100,8 +103,9 @@ backtest run without it).
 
 ## Deploy
 
-The trained model, processed prices, and Chroma store (~2.6 MB total) are committed,
-so the container is self-contained — no rebuild step on the host.
+The trained models, processed prices, and Chroma store for all 5 NEM regions
+(~5.3 MB total) are committed, so the container is self-contained — no rebuild
+step on the host.
 
 ### Free — Google Cloud Run (recommended for a demo)
 
@@ -140,6 +144,7 @@ src/bess/
   backtest.py    day-ahead receding-horizon evaluation
   rag.py         Chroma + sentence-transformers ingest/query
   agent.py       LangGraph StateGraph + tools
+  api.py         FastAPI service layer over optimiser/forecaster/advisor
 app/             Streamlit demo
 scripts/         fetch_data, train_forecast, run_backtest
 deploy/          ECS task definition + deploy script
@@ -153,9 +158,16 @@ tests/           optimiser invariants
   real battery's stacked return (see `docs/knowledge/fcas_and_revenue_stacking.md`).
 - Prices are raw RRP; MLF, network charges, and connection costs aren't netted off.
 - Day-ahead framing pins terminal SoC to the start each day (no multi-day shifting).
-- Trained on one year for three regions (SA1, NSW1, VIC1); the pipeline generalises
-  to all five NEM regions. Forecast skill vs naive scales with volatility: NSW1
-  +32%, SA1 +7.5%, VIC1 +4% (the spikier the region, the more the model helps).
+- Trained on one year across all five NEM regions (SA1, NSW1, VIC1, QLD1, TAS1).
+  Forecast skill (MAE vs seasonal-naive) roughly scales with volatility: NSW1 +32%,
+  QLD1 +18%, TAS1 +10%, SA1 +7.5%, VIC1 +4%.
+- **A more accurate forecast doesn't guarantee a better dispatch decision.** QLD1's
+  forecaster beats naive on MAE (+18%), but the resulting *dispatch* policy actually
+  earns slightly **less** revenue than the naive policy (59.8% vs 61.3% of perfect
+  foresight) — a handful of large forecast misses on high-value hours cost more than
+  the average-case accuracy gain is worth. Point-forecast skill and downstream
+  decision quality are related but distinct, and this project reports both rather
+  than only the one that flatters the model.
 
 ## Tech
 
